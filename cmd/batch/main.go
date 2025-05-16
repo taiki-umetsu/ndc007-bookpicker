@@ -7,6 +7,7 @@ import (
 
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/cinii"
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/database"
+	"github.com/taiki-umetsu/ndc007-bookpicker/internal/googlebooks"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -29,13 +30,19 @@ func main() {
 		log.Fatal("環境変数 CINII_APPID が未設定です")
 	}
 
+	gbKey := os.Getenv("GOOGLE_BOOKS_KEY")
+	if gbKey == "" {
+		log.Fatal("環境変数 GOOGLE_BOOKS_KEY が未設定です")
+	}
+
 	db, err := database.Setup(dsn)
 	if err != nil {
 		log.Fatal("DB接続エラー:", err)
 	}
 	defer db.Close()
 
-	if err := database.CreateTable(db); err != nil {
+	err = database.CreateTable(db)
+	if err != nil {
 		log.Fatal("テーブル作成エラー:", err)
 	}
 
@@ -43,39 +50,44 @@ func main() {
 
 	const (
 		yearFrom = 2020
-		count    = 10
+		//count    = 10
+		count = 1
 	)
 
 	ndcList := []string{
-		"007",     // General（完全一致）
-		"007.1*",  // 情報学基礎理論
-		"007.3*",  // 情報機器・装置
-		"007.5*",  // 情報処理・情報システム
-		"007.6*",  // 情報ネットワーク・通信
-		"007.63*", // インターネット
-		"007.64*", // ウェブ
+		"007", // General（完全一致）
+		//"007.1*",  // 情報学基礎理論
+		//"007.3*",  // 情報機器・装置
+		//"007.5*",  // 情報処理・情報システム
+		//"007.6*",  // 情報ネットワーク・通信
+		//"007.63*", // インターネット
+		//"007.64*", // ウェブ
 	}
-
+	var isbns []string
 	for _, ndc := range ndcList {
-		processNDC(ciniiClient, ndc, yearFrom, count)
+		fmt.Printf("\nfetch from CiNii 分類コード: %s\n", ndc)
+
+		isbns, err = ciniiClient.FetchRandomISBNs(ndc, yearFrom, count)
+		if err != nil {
+			log.Printf("❌ %s: ISBN取得失敗: %v", ndc, err)
+			continue
+		}
+
+		if len(isbns) == 0 {
+			fmt.Println("ISBN が見つかりませんでした")
+			continue
+		}
 	}
-}
+	fmt.Println(isbns)
 
-func processNDC(client *cinii.Client, ndc string, yearFrom, count int) {
-	fmt.Printf("\n🔎 分類コード: %s\n", ndc)
-
-	isbns, err := client.FetchRandomISBNs(ndc, yearFrom, count)
-	if err != nil {
-		log.Printf("❌ %s: ISBN取得失敗: %v", ndc, err)
-		return
-	}
-
-	if len(isbns) == 0 {
-		fmt.Println("📚 ISBN が見つかりませんでした")
-		return
-	}
-
+	gbClient := googlebooks.NewClient(gbKey)
 	for _, isbn := range isbns {
-		fmt.Printf("📘 %s\n", isbn)
+		fmt.Printf("\nfetch from Google isbn: %s\n", isbn)
+
+		book, err := gbClient.Fetch(isbn)
+		if err != nil {
+			log.Fatal("本情報取得失敗:", err)
+		}
+		fmt.Println(book)
 	}
 }
