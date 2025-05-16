@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS books (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ndc_code VARCHAR(10) NOT NULL,
     isbn VARCHAR(20) NOT NULL UNIQUE,
     title VARCHAR(255) NOT NULL,
-    author VARCHAR(255) NOT NULL,
+    subtitle VARCHAR(255) NOT NULL,
+    authors VARCHAR(255) NOT NULL,
     publisher VARCHAR(255) NOT NULL,
     published_date VARCHAR(10) NOT NULL,
     description TEXT,

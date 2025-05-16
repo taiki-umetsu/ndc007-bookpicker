@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/cinii"
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/database"
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/googlebooks"
+	"github.com/taiki-umetsu/ndc007-bookpicker/internal/model/book"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -80,14 +83,34 @@ func main() {
 	}
 	fmt.Println(isbns)
 
+	ctx := context.Background()
 	gbClient := googlebooks.NewClient(gbKey)
+	now := time.Now()
+
 	for _, isbn := range isbns {
 		fmt.Printf("\nfetch from Google isbn: %s\n", isbn)
-
-		book, err := gbClient.Fetch(isbn)
+		gbInfo, err := gbClient.Fetch(isbn)
+		fmt.Println(gbInfo)
 		if err != nil {
 			log.Fatal("本情報取得失敗:", err)
 		}
-		fmt.Println(book)
+
+		b := book.NewBook(
+			isbn,
+			gbInfo.Title,
+			gbInfo.Subtitle,
+			gbInfo.Authors,
+			gbInfo.Publisher,
+			gbInfo.PublishedDate,
+			gbInfo.Description,
+			gbInfo.InfoLink,
+			gbInfo.ImageLinks.Thumbnail,
+		)
+
+		if err := b.Insert(ctx, db); err != nil {
+			log.Printf("❌ 保存エラー: %v", err)
+		}
 	}
+	book.DeleteBefore(ctx, db, now)
+
 }
