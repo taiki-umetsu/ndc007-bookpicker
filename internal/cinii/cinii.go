@@ -99,7 +99,8 @@ func (c *Client) fetchTotalResults(ndc string, yearFrom int) (int, error) {
 	}
 
 	var cr ciniiResponse
-	if err := json.Unmarshal(raw, &cr); err != nil {
+	err = json.Unmarshal(raw, &cr)
+	if err != nil {
 		return 0, fmt.Errorf("JSONパース失敗: %w", err)
 	}
 
