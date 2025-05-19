@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/cinii"
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/database"
@@ -68,11 +67,12 @@ func main() {
 	}
 
 	var isbns []string
+	seen := make(map[string]bool)
 	for _, ndc := range ndcList {
 		fmt.Printf("\nfetch from CiNii 分類コード: %s\n", ndc)
 
-		fetched, err := ciniiClient.FetchRandomISBNs(ndc, yearFrom, count)
-		if err != nil {
+		fetched, fetchErr := ciniiClient.FetchRandomISBNs(ndc, yearFrom, count)
+		if fetchErr != nil {
 			log.Printf("❌ %s: ISBN取得失敗: %v", ndc, err)
 			continue
 		}
@@ -82,25 +82,29 @@ func main() {
 			continue
 		}
 
-		isbns = append(isbns, fetched...)
+		for _, isbn := range fetched {
+			if !seen[isbn] {
+				isbns = append(isbns, isbn)
+				seen[isbn] = true
+			}
+		}
 	}
-	fmt.Println(isbns)
+	fmt.Println("isbns:", isbns)
 
 	ctx := context.Background()
 	gbClient := googlebooks.NewClient(gbKey)
-	now := time.Now()
 
-	// TODO; バルクインサート
+	var books []*book.Book
 	for _, isbn := range isbns {
 		fmt.Printf("\nfetch from Google isbn: %s\n", isbn)
-		gbInfo, err := gbClient.Fetch(isbn)
+		gbInfo, gbErr := gbClient.Fetch(isbn)
 		fmt.Println(gbInfo)
-		if err != nil {
+		if gbErr != nil {
 			fmt.Println("本情報取得失敗:", err)
 			continue
 		}
 
-		b := book.NewBook(
+		books = append(books, book.NewBook(
 			isbn,
 			gbInfo.Title,
 			gbInfo.Subtitle,
@@ -110,12 +114,11 @@ func main() {
 			gbInfo.Description,
 			gbInfo.InfoLink,
 			gbInfo.ImageLinks.Thumbnail,
-		)
-
-		if err := b.Insert(ctx, db); err != nil {
-			log.Printf("❌ 保存エラー: %v", err)
-		}
+		))
 	}
-	book.DeleteBefore(ctx, db, now)
 
+	err = book.TruncateAndBulkInsert(ctx, db, books)
+	if err != nil {
+		log.Fatalf("❌ 書き込み失敗: %v", err)
+	}
 }

@@ -2,11 +2,14 @@ package database
 
 import (
 	"database/sql"
+	_ "embed"
 	"fmt"
-	"os"
 
 	_ "github.com/lib/pq"
 )
+
+//go:embed schema.sql
+var schemaSQL string
 
 func Setup(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dsn)
@@ -21,13 +24,6 @@ func Setup(dsn string) (*sql.DB, error) {
 }
 
 func CreateTable(db *sql.DB) error {
-	schemaPath := "internal/database/schema.sql"
-
-	schemaSQL, err := os.ReadFile(schemaPath)
-	if err != nil {
-		return fmt.Errorf("DDLファイル読み込みエラー: %w", err)
-	}
-
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("トランザクション開始エラー: %w", err)
