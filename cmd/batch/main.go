@@ -53,33 +53,36 @@ func main() {
 
 	const (
 		yearFrom = 2020
-		//count    = 10
-		count = 1
+		count    = 10
 	)
 
+	// 参考: https://www.ndl.go.jp/jp/data/NDC10code201708.pdf
 	ndcList := []string{
-		"007", // General（完全一致）
-		//"007.1*",  // 情報学基礎理論
-		//"007.3*",  // 情報機器・装置
-		//"007.5*",  // 情報処理・情報システム
-		//"007.6*",  // 情報ネットワーク・通信
-		//"007.63*", // インターネット
-		//"007.64*", // ウェブ
+		"007",     // 情報学．情報科学
+		"007.3*",  // 情報と社会：情報政策，情報倫理
+		"007.6",   // データ処理．情報処理
+		"007.609", // データ管理：データセキュリティ，データマイニング
+		"007.61",  // システム分析．システム設計．システム開発
+		"007.63",  // コンピュータシステム．ソフトウェア．ミドルウェア．アプリケーション
+		"007.64",  // コンピュータプログラミング
 	}
+
 	var isbns []string
 	for _, ndc := range ndcList {
 		fmt.Printf("\nfetch from CiNii 分類コード: %s\n", ndc)
 
-		isbns, err = ciniiClient.FetchRandomISBNs(ndc, yearFrom, count)
+		fetched, err := ciniiClient.FetchRandomISBNs(ndc, yearFrom, count)
 		if err != nil {
 			log.Printf("❌ %s: ISBN取得失敗: %v", ndc, err)
 			continue
 		}
 
-		if len(isbns) == 0 {
+		if len(fetched) == 0 {
 			fmt.Println("ISBN が見つかりませんでした")
 			continue
 		}
+
+		isbns = append(isbns, fetched...)
 	}
 	fmt.Println(isbns)
 
@@ -87,12 +90,14 @@ func main() {
 	gbClient := googlebooks.NewClient(gbKey)
 	now := time.Now()
 
+	// TODO; バルクインサート
 	for _, isbn := range isbns {
 		fmt.Printf("\nfetch from Google isbn: %s\n", isbn)
 		gbInfo, err := gbClient.Fetch(isbn)
 		fmt.Println(gbInfo)
 		if err != nil {
-			log.Fatal("本情報取得失敗:", err)
+			fmt.Println("本情報取得失敗:", err)
+			continue
 		}
 
 		b := book.NewBook(
