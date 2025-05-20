@@ -38,21 +38,6 @@ func NewBook(isbn, title, subtitle string, authors []string, publisher, publishe
 	}
 }
 
-func DeleteBefore(ctx context.Context, db *sql.DB, cutoff time.Time) (int64, error) {
-	query := `DELETE FROM books WHERE updated_at < $1`
-
-	res, err := db.ExecContext(ctx, query, cutoff)
-	if err != nil {
-		return 0, fmt.Errorf("DeleteBefore ExecContext エラー: %w", err)
-	}
-
-	n, err := res.RowsAffected()
-	if err != nil {
-		return 0, fmt.Errorf("DeleteBefore RowsAffected エラー: %w", err)
-	}
-	return n, nil
-}
-
 func (b *Book) Insert(ctx context.Context, db *sql.DB) error {
 	authors := strings.Join(b.Authors, ", ")
 
