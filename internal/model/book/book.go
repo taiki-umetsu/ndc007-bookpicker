@@ -18,13 +18,13 @@ type Book struct {
 	Publisher     string
 	PublishedDate string
 	Description   string
-	InfoLink      string
+	BookURL       string
 	ImageURL      string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
 
-func NewBook(isbn, title, subtitle string, authors []string, publisher, publishedDate, description, infoLink, imageURL string) *Book {
+func NewBook(isbn, title, subtitle string, authors []string, publisher, publishedDate, description, bookURL, imageURL string) *Book {
 	return &Book{
 		ISBN:          isbn,
 		Title:         title,
@@ -33,7 +33,7 @@ func NewBook(isbn, title, subtitle string, authors []string, publisher, publishe
 		Publisher:     publisher,
 		PublishedDate: publishedDate,
 		Description:   description,
-		InfoLink:      infoLink,
+		BookURL:       bookURL,
 		ImageURL:      imageURL,
 	}
 }
@@ -64,7 +64,7 @@ func (b *Book) Insert(ctx context.Context, db *sql.DB) error {
 		b.Publisher,
 		b.PublishedDate,
 		b.Description,
-		b.InfoLink,
+		b.BookURL,
 		b.ImageURL,
 		b.CreatedAt,
 		b.UpdatedAt,
@@ -114,7 +114,7 @@ func BulkInsert(ctx context.Context, tx *sql.Tx, books []*Book) (int, error) {
 			b.Publisher,
 			b.PublishedDate,
 			b.Description,
-			b.InfoLink,
+			b.BookURL,
 			b.ImageURL,
 			b.CreatedAt,
 			b.UpdatedAt,
