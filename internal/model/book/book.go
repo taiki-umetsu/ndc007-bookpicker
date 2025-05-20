@@ -92,19 +92,7 @@ func (b *Book) Insert(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-// books テーブルの全件データを入れ替えるため、TRUNCATE 後にバルクインサートを実施する
-func TruncateAndBulkInsert(ctx context.Context, db *sql.DB, books []*Book) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("トランザクション開始エラー: %w", err)
-	}
-	defer tx.Rollback()
-
-	_, err = tx.ExecContext(ctx, "TRUNCATE TABLE books")
-	if err != nil {
-		return fmt.Errorf("TRUNCATEエラー: %w", err)
-	}
-
+func BulkInsert(ctx context.Context, tx *sql.Tx, books []*Book) (int, error) {
 	stmt, err := tx.PrepareContext(ctx, pq.CopyIn(
 		"books",
 		"isbn",
@@ -119,7 +107,7 @@ func TruncateAndBulkInsert(ctx context.Context, db *sql.DB, books []*Book) error
 		"created_at",
 		"updated_at"))
 	if err != nil {
-		return fmt.Errorf("COPY文準備エラー: %w", err)
+		return 0, fmt.Errorf("COPY文準備エラー: %w", err)
 	}
 	defer stmt.Close()
 
@@ -133,7 +121,7 @@ func TruncateAndBulkInsert(ctx context.Context, db *sql.DB, books []*Book) error
 
 		authors := strings.Join(b.Authors, ", ")
 
-		if _, err := stmt.ExecContext(ctx,
+		_, err = stmt.ExecContext(ctx,
 			b.ISBN,
 			b.Title,
 			b.Subtitle,
@@ -145,18 +133,21 @@ func TruncateAndBulkInsert(ctx context.Context, db *sql.DB, books []*Book) error
 			b.ImageURL,
 			b.CreatedAt,
 			b.UpdatedAt,
-		); err != nil {
-			return fmt.Errorf("COPY挿入エラー: %w", err)
+		)
+		if err != nil {
+			return 0, fmt.Errorf("COPY挿入エラー (ISBN: %s): %w", b.ISBN, err)
 		}
 	}
 
-	if _, err := stmt.ExecContext(ctx); err != nil {
-		return fmt.Errorf("COPY完了処理エラー: %w", err)
+	res, err := stmt.ExecContext(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("COPY完了処理エラー: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("コミットエラー: %w", err)
+	count64, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("挿入件数取得エラー: %w", err)
 	}
 
-	return nil
+	return int(count64), nil
 }

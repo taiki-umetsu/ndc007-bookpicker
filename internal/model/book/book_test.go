@@ -13,7 +13,7 @@ import (
 
 func BenchmarkInsertBook(b *testing.B) {
 	if err := godotenv.Load("../../../.env.test"); err != nil {
-		log.Println("Warning: .env.test の読み込みに失敗:", err)
+		log.Println(".env.test の読み込みに失敗:", err)
 	}
 
 	ctx := context.Background()
@@ -46,13 +46,26 @@ func BenchmarkInsertBook(b *testing.B) {
 
 	b.Run("バルクインサート", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
+			b.StopTimer()
+			db.Exec("TRUNCATE TABLE books")
+			b.StartTimer()
+
 			books := make([]*Book, batchSize)
 			for j := 0; j < batchSize; j++ {
 				books[j] = NewBook(strconv.Itoa(j), "タイトル", "", []string{"著者"}, "出版社", "2020", "説明", "http://example.com", "")
 			}
 
-			if err := TruncateAndBulkInsert(ctx, db, books); err != nil {
+			tx, txErr := db.BeginTx(ctx, nil)
+			if txErr != nil {
+				log.Fatalf("トランザクション開始エラー: %v", txErr)
+			}
+			defer tx.Rollback()
+
+			if _, err := BulkInsert(ctx, tx, books); err != nil {
 				b.Fatalf("バルク挿入失敗: %v", err)
+			}
+			if err := tx.Commit(); err != nil {
+				b.Fatalf("コミットエラー: %v", err)
 			}
 		}
 	})
