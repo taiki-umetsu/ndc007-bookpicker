@@ -15,6 +15,7 @@ func NewRouter(handler *Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(RequestLogger)
+	r.Use(Recovery)
 
 	r.Get("/api/v1/books/random", handler.RandomBooks)
 
