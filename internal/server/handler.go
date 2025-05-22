@@ -39,10 +39,8 @@ func (h *Handler) RandomBooks(w http.ResponseWriter, r *http.Request) {
 	if q := r.URL.Query().Get("count"); q != "" {
 		n, err := strconv.Atoi(q)
 		if err != nil || n < 1 || n > maxRandomCount {
-			http.Error(w,
-				fmt.Sprintf("invalid count parameter: must be integer between 1 and %d", maxRandomCount),
-				http.StatusBadRequest,
-			)
+			writeJSONError(w, http.StatusBadRequest,
+				fmt.Sprintf("invalid count parameter: must be integer between 1 and %d", maxRandomCount))
 			return
 		}
 		count = n
@@ -66,7 +64,7 @@ func (h *Handler) RandomBooks(w http.ResponseWriter, r *http.Request) {
 	`
 	rows, err := h.DB.Query(query, count)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	defer rows.Close()
@@ -87,7 +85,7 @@ func (h *Handler) RandomBooks(w http.ResponseWriter, r *http.Request) {
 			&b.ImageURL,
 		)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		books = append(books, b)
