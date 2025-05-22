@@ -13,6 +13,9 @@ var specFS embed.FS
 
 func NewRouter(handler *Handler) http.Handler {
 	r := chi.NewRouter()
+
+	r.Use(RequestLogger)
+
 	r.Get("/api/v1/books/random", handler.RandomBooks)
 
 	r.Get("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
