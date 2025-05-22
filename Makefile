@@ -32,6 +32,7 @@ build: test
 	go mod tidy
 	@mkdir -p bin
 	go build -o bin/batch ./cmd/batch
+	go build -o bin/api   ./cmd/api
 
 .PHONY: clean
 clean:
