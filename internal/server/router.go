@@ -16,6 +16,7 @@ func NewRouter(handler *Handler) http.Handler {
 
 	r.Use(RequestLogger)
 	r.Use(Recovery)
+	r.Use(CORS())
 
 	r.Get("/api/v1/books/random", handler.RandomBooks)
 
