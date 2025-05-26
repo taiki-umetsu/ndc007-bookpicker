@@ -3,8 +3,10 @@ package server
 import (
 	"embed"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	swaggermiddleware "github.com/go-openapi/runtime/middleware"
 )
 
@@ -17,6 +19,7 @@ func NewRouter(handler *Handler) http.Handler {
 	r.Use(RequestLogger)
 	r.Use(Recovery)
 	r.Use(CORS())
+	r.Use(httprate.LimitByIP(10, 1*time.Minute))
 
 	r.Get("/api/v1/books/random", handler.RandomBooks)
 
