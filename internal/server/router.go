@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
-	swaggermiddleware "github.com/go-openapi/runtime/middleware"
+	swgmdw "github.com/go-openapi/runtime/middleware"
 )
 
 //go:embed openapi.yaml
@@ -33,7 +33,7 @@ func NewRouter(handler *Handler) http.Handler {
 		w.Write(data)
 	})
 
-	opts := swaggermiddleware.SwaggerUIOpts{SpecURL: "/openapi.yaml"}
-	r.Handle("/docs", swaggermiddleware.SwaggerUI(opts, nil))
+	opts := swgmdw.SwaggerUIOpts{SpecURL: "/openapi.yaml"}
+	r.Handle("/docs", swgmdw.SwaggerUI(opts, nil))
 	return r
 }
