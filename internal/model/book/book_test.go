@@ -7,14 +7,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/joho/godotenv"
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/database"
+	"github.com/taiki-umetsu/ndc007-bookpicker/internal/env"
 )
 
 func BenchmarkInsertBook(b *testing.B) {
-	if err := godotenv.Load("../../../.env.test"); err != nil {
-		log.Println(".env.test の読み込みに失敗:", err)
-	}
+	env.Load()
 
 	ctx := context.Background()
 	db, err := database.Setup(os.Getenv("DATABASE_URL"))

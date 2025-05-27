@@ -6,17 +6,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/database"
+	"github.com/taiki-umetsu/ndc007-bookpicker/internal/env"
 	"github.com/taiki-umetsu/ndc007-bookpicker/internal/server"
 )
 
 func main() {
-	if os.Getenv("GO_ENV") != "production" {
-		if err := godotenv.Load(".env.development"); err != nil {
-			log.Println("Warning: .env.development ファイルの読み込みに失敗しました:", err)
-		}
-	}
+	env.Load()
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
