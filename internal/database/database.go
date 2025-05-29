@@ -29,7 +29,7 @@ func CreateTable(db *sql.DB) error {
 		return fmt.Errorf("トランザクション開始エラー: %w", err)
 	}
 
-	if _, err := tx.Exec(string(schemaSQL)); err != nil {
+	if _, err := tx.Exec(schemaSQL); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("DDL実行エラー: %w", err)
 	}
