@@ -72,7 +72,7 @@ func (c *Client) Fetch(isbn string) (*VolumeInfo, error) {
 		retry.Delay(2*time.Second),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("Google Books API リクエストエラー: %w", err)
+		return nil, fmt.Errorf("google books API リクエストエラー: %w", err)
 	}
 
 	var response GoogleBooksResponse

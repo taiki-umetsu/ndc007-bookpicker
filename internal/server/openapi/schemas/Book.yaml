@@ -1,0 +1,42 @@
+type: object
+properties:
+  id:
+    type: integer
+    format: int64
+  isbn:
+    type: string
+  title:
+    type: string
+  subtitle:
+    type: string
+  authors:
+    type: string
+  publisher:
+    type: string
+  publishedDate:
+    type: string
+    description: |
+      Publication date. Supports:
+      - Full date: YYYY-MM-DD
+      - Year-month only: YYYY-MM
+      - Year only: YYYY
+    pattern: '^\d{4}(?:-\d{2}(?:-\d{2})?)?$'
+  description:
+    type: string
+  bookUrl:
+    type: string
+    format: uri
+  imageUrl:
+    type: string
+    format: uri
+required:
+  - id
+  - isbn
+  - title
+  - subtitle
+  - authors
+  - publisher
+  - publishedDate
+  - description
+  - bookUrl
+  - imageUrl

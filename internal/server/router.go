@@ -1,7 +1,7 @@
 package server
 
 import (
-	"embed"
+	_ "embed"
 	"net/http"
 	"time"
 
@@ -10,8 +10,8 @@ import (
 	swgmdw "github.com/go-openapi/runtime/middleware"
 )
 
-//go:embed openapi.yaml
-var specFS embed.FS
+//go:embed openapi/openapi.bundle.yaml
+var bundledSpec []byte
 
 func NewRouter(handler *Handler) http.Handler {
 	r := chi.NewRouter()
@@ -24,13 +24,8 @@ func NewRouter(handler *Handler) http.Handler {
 	r.Get("/api/v1/books/random", handler.RandomBooks)
 
 	r.Get("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
-		data, err := specFS.ReadFile("openapi.yaml")
-		if err != nil {
-			http.Error(w, "cannot read spec", http.StatusInternalServerError)
-			return
-		}
 		w.Header().Set("Content-Type", "application/yaml")
-		w.Write(data)
+		w.Write(bundledSpec)
 	})
 
 	opts := swgmdw.SwaggerUIOpts{SpecURL: "/openapi.yaml"}
