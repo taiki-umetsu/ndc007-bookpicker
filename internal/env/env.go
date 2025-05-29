@@ -13,7 +13,7 @@ import (
 func Load() {
 	env := os.Getenv("GO_ENV")
 	if env == "" {
-		env = "development"
+		log.Fatal("GO_ENV にデータが設定されていません")
 	}
 	if env == "production" {
 		return
