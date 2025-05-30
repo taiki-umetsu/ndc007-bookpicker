@@ -10,17 +10,18 @@ tools:
 	@for tool in $(GOTOOLS); do \
 		go install $$tool@latest; \
 	done
-	@echo "Checking swagger-cli..."
-	@if ! command -v swagger-cli >/dev/null 2>&1; then \
-		echo "Installing swagger-cli via npm..."; \
-		npm install -g @apidevtools/swagger-cli; \
+	@echo "Checking redocly CLI..."
+	@if ! command -v redocly >/dev/null 2>&1; then \
+		echo "Installing @redocly/cli via npm..."; \
+		npm install -g @redocly/cli; \
 	else \
-		echo "swagger-cli already installed."; \
+		echo "redocly already installed."; \
 	fi
 
 openapi_bundle:
-	@echo "Bundling OpenAPI spec..."
-	swagger-cli bundle internal/server/openapi/openapi.yaml --dereference -o internal/server/openapi/openapi.bundle.yaml
+	@echo "Bundling OpenAPI spec using redocly..."
+	redocly bundle internal/server/openapi/openapi.yaml \
+	  --output internal/server/openapi/openapi.bundle.yaml
 
 fmt:
 	go fmt ./...
@@ -35,7 +36,7 @@ lint:
 test:
 	GO_ENV=test go test -v ./...
 
-build: tools openapi_bundle fmt vet lint test 
+build: tools openapi_bundle fmt vet lint test
 	go mod tidy
 	@mkdir -p bin
 	go build -o bin/batch ./cmd/batch
