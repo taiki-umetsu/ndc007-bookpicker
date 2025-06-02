@@ -28,19 +28,28 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Submit Cloud Build (API)
+        id: cloudbuild
         run: |
-          gcloud builds submit \
-            --config=cloudbuild-api.yaml \
-            --quiet \
+          BUILD_ID=$(gcloud builds submit --config=cloudbuild-api.yaml \
             --substitutions="\
-          _SERVICE_NAME=${{ vars.API_SERVICE_NAME }},\
-          _REGION=${{ vars.REGION }},\
-          _IMAGE_NAME=${{ vars.API_IMAGE_NAME }},\
-          _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
-          _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }}\
-          "
+              _SERVICE_NAME=${{ vars.API_SERVICE_NAME }},\
+              _REGION=${{ vars.REGION }},\
+              _IMAGE_NAME=${{ vars.API_IMAGE_NAME }},\
+              _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
+              _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }}" \
+            --no-source \
+            --no-stream \
+            --format='value(metadata.build.id)')
+          
+          echo "BUILD_ID=$BUILD_ID" >> "$GITHUB_ENV"
 
-      - name: Verify deployment
+      - name: Wait for build result
         run: |
-          echo "Deployment completed successfully"
-          gcloud run services describe ${{ vars.API_SERVICE_NAME }} --region=${{ vars.REGION }}
+          echo "Waiting for build $BUILD_ID..."
+          STATUS=$(gcloud builds describe "$BUILD_ID" --format='value(status)')
+          
+          echo "Build status: $STATUS"
+          if [[ "$STATUS" != "SUCCESS" ]]; then
+            echo "Build failed"
+            exit 1
+          fi
