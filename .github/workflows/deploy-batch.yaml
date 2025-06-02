@@ -39,10 +39,6 @@ jobs:
           _JOB_NAME=${{ vars.BATCH_JOB_NAME }},\
           _SCHEDULER_NAME=${{ vars.SCHEDULER_NAME }},\
           _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
-          _DB_SECRET=${{ vars.DB_SECRET }},\
-          _GO_ENV_SECRET=${{ vars.GO_ENV_SECRET }},\
-          _CINII_SECRET=${{ vars.CINII_SECRET }},\
-          _BOOKS_KEY_SECRET=${{ vars.BOOKS_KEY_SECRET }},\
           _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }},\
           _SCHEDULE_TIME=${{ vars.SCHEDULE_TIME }}\
           ")
