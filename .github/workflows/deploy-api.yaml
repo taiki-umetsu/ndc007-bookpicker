@@ -30,20 +30,17 @@ jobs:
       - name: Submit Cloud Build (API)
         run: |
           BUILD_ID=$(gcloud builds submit \
-            --config=cloudbuild-api.yaml \
-            --async \
-            --format="value(name)" \
-            --substitutions="\
-            _SERVICE_NAME=${{ vars.API_SERVICE_NAME }},\
-            _REGION=${{ vars.REGION }},\
-            _IMAGE_NAME=${{ vars.API_IMAGE_NAME }},\
-            _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
-            _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }}\
-            ")
-          
-          echo "Build submitted with ID: $BUILD_ID"
-          echo "Logs available at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ secrets.GCP_PROJECT_ID }}"
-          
+          --config=cloudbuild-api.yaml \
+          --async \
+          --format="value(name)" \
+          --substitutions="\
+          _SERVICE_NAME=${{ vars.API_SERVICE_NAME }},\
+          _REGION=${{ vars.REGION }},\
+          _IMAGE_NAME=${{ vars.API_IMAGE_NAME }},\
+          _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
+          _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }}\
+          ")
+
           echo "Waiting for build to complete..."
           while true; do
             STATUS=$(gcloud builds describe $BUILD_ID --format="value(status)" 2>/dev/null || echo "UNKNOWN")
