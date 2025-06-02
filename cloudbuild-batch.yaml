@@ -6,7 +6,7 @@ steps:
       - -f
       - 'Dockerfile.batch'
       - -t
-      - 'gcr.io/${_PROJECT_ID}/${_IMAGE_NAME}'
+      - '${_IMAGE_NAME}'
       - '.'
 
   # Cloud Run Job のデプロイ
