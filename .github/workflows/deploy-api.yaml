@@ -28,28 +28,35 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Submit Cloud Build (API)
-        id: cloudbuild
         run: |
-          BUILD_ID=$(gcloud builds submit --config=cloudbuild-api.yaml \
+          BUILD_ID=$(gcloud builds submit \
+            --config=cloudbuild-api.yaml \
+            --async \
+            --format="value(name)" \
             --substitutions="\
-              _SERVICE_NAME=${{ vars.API_SERVICE_NAME }},\
-              _REGION=${{ vars.REGION }},\
-              _IMAGE_NAME=${{ vars.API_IMAGE_NAME }},\
-              _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
-              _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }}" \
-            --no-source \
-            --no-stream \
-            --format='value(metadata.build.id)')
+            _SERVICE_NAME=${{ vars.API_SERVICE_NAME }},\
+            _REGION=${{ vars.REGION }},\
+            _IMAGE_NAME=${{ vars.API_IMAGE_NAME }},\
+            _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
+            _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }}\
+            ")
           
-          echo "BUILD_ID=$BUILD_ID" >> "$GITHUB_ENV"
-
-      - name: Wait for build result
-        run: |
-          echo "Waiting for build $BUILD_ID..."
-          STATUS=$(gcloud builds describe "$BUILD_ID" --format='value(status)')
+          echo "Build submitted with ID: $BUILD_ID"
+          echo "Logs available at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ secrets.GCP_PROJECT_ID }}"
           
-          echo "Build status: $STATUS"
-          if [[ "$STATUS" != "SUCCESS" ]]; then
-            echo "Build failed"
-            exit 1
-          fi
+          echo "Waiting for build to complete..."
+          while true; do
+            STATUS=$(gcloud builds describe $BUILD_ID --format="value(status)" 2>/dev/null || echo "UNKNOWN")
+            echo "Current status: $STATUS"
+            
+            if [ "$STATUS" = "SUCCESS" ]; then
+              echo "Build completed successfully!"
+              break
+            elif [ "$STATUS" = "FAILURE" ] || [ "$STATUS" = "CANCELLED" ] || [ "$STATUS" = "TIMEOUT" ]; then
+              echo "Build failed with status: $STATUS"
+              echo "Check logs at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ secrets.GCP_PROJECT_ID }}"
+              exit 1
+            fi
+            
+            sleep 10
+          done
