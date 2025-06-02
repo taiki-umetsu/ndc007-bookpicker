@@ -29,10 +29,10 @@ jobs:
 
       - name: Submit Cloud Build (Batch)
         run: |
-          gcloud builds submit \
-            --config=cloudbuild-batch.yaml \
-            --quiet \
-            --substitutions="\
+          BUILD_ID=$(gcloud builds submit \
+          --config=cloudbuild-batch.yaml \
+          --quiet \
+          --substitutions="\
           _PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},\
           _REGION=${{ vars.REGION }},\
           _IMAGE_NAME=${{ vars.BATCH_IMAGE_NAME }},\
@@ -45,4 +45,21 @@ jobs:
           _BOOKS_KEY_SECRET=${{ vars.BOOKS_KEY_SECRET }},\
           _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }},\
           _SCHEDULE_TIME=${{ vars.SCHEDULE_TIME }}\
-          "
+          ")
+
+          echo "Waiting for build to complete..."
+          while true; do
+            STATUS=$(gcloud builds describe $BUILD_ID --format="value(status)" 2>/dev/null || echo "UNKNOWN")
+            echo "Current status: $STATUS"
+            
+            if [ "$STATUS" = "SUCCESS" ]; then
+              echo "Build completed successfully!"
+              break
+            elif [ "$STATUS" = "FAILURE" ] || [ "$STATUS" = "CANCELLED" ] || [ "$STATUS" = "TIMEOUT" ]; then
+              echo "Build failed with status: $STATUS"
+              echo "Check logs at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ secrets.GCP_PROJECT_ID }}"
+              exit 1
+            fi
+            
+            sleep 30
+          done
