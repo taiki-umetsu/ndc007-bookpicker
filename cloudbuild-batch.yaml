@@ -20,7 +20,7 @@ steps:
       - --image=gcr.io/${_PROJECT_ID}/${_IMAGE_NAME}
       - --region=${_REGION}
       - --service-account=${_SERVICE_ACCOUNT}
-      - --set-secrets=DATABASE_URL=${_DB_SECRET}:latest,GO_ENV=${_GO_ENV_SECRET}:latest,CINII_APPID=${_CINII_SECRET}:latest,GOOGLE_BOOKS_KEY=${_BOOKS_KEY_SECRET}:latest
+      - --set-secrets=DATABASE_URL=database-url:latest,GO_ENV=go-env:latest,CINII_APPID=cinii-appid:latest,GOOGLE_BOOKS_KEY=google-books-key:latest
       - --set-cloudsql-instances=${_CLOUDSQL_INSTANCE}
 
   # Cloud Scheduler 作成 or 更新
