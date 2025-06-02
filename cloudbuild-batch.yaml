@@ -17,7 +17,7 @@ steps:
       - jobs
       - deploy
       - '${_JOB_NAME}'
-      - --image=gcr.io/${_PROJECT_ID}/${_IMAGE_NAME}
+      - --image=${_IMAGE_NAME}
       - --region=${_REGION}
       - --service-account=${_SERVICE_ACCOUNT}
       - --set-secrets=DATABASE_URL=database-url:latest,GO_ENV=go-env:latest,CINII_APPID=cinii-appid:latest,GOOGLE_BOOKS_KEY=google-books-key:latest
@@ -46,6 +46,3 @@ steps:
             --oauth-service-account-email=${_SERVICE_ACCOUNT} \
             --location=${_REGION}
         fi
-
-images:
-  - 'gcr.io/${_PROJECT_ID}/${_IMAGE_NAME}'
