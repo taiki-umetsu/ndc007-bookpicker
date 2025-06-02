@@ -31,6 +31,7 @@ jobs:
         run: |
           gcloud builds submit \
             --config=cloudbuild-batch.yaml \
+            --no-log-http \
             --substitutions="\
           _PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},\
           _REGION=${{ vars.REGION }},\
