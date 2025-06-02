@@ -25,7 +25,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ vars.PROJECT_ID }}
 
       - name: Submit Cloud Build (Batch)
         run: |
@@ -34,7 +34,7 @@ jobs:
           --async \
           --format="value(name)" \
           --substitutions="\
-          _PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},\
+          _PROJECT_ID=${{ vars.PROJECT_ID }},\
           _REGION=${{ vars.REGION }},\
           _IMAGE_NAME=${{ vars.BATCH_IMAGE_NAME }},\
           _JOB_NAME=${{ vars.BATCH_JOB_NAME }},\
@@ -54,7 +54,7 @@ jobs:
               break
             elif [ "$STATUS" = "FAILURE" ] || [ "$STATUS" = "CANCELLED" ] || [ "$STATUS" = "TIMEOUT" ]; then
               echo "Build failed with status: $STATUS"
-              echo "Check logs at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ secrets.GCP_PROJECT_ID }}"
+              echo "Check logs at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ vars.PROJECT_ID }}"
               exit 1
             fi
             

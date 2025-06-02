@@ -25,7 +25,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ vars.PROJECT_ID }}
 
       - name: Submit Cloud Build (API)
         run: |
@@ -51,7 +51,7 @@ jobs:
               break
             elif [ "$STATUS" = "FAILURE" ] || [ "$STATUS" = "CANCELLED" ] || [ "$STATUS" = "TIMEOUT" ]; then
               echo "Build failed with status: $STATUS"
-              echo "Check logs at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ secrets.GCP_PROJECT_ID }}"
+              echo "Check logs at: https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=${{ vars.PROJECT_ID }}"
               exit 1
             fi
             
