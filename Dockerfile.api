@@ -1,0 +1,26 @@
+# ビルドステージ
+FROM golang:1.24-alpine AS builder
+
+RUN apk add --no-cache nodejs npm
+RUN npm install -g @redocly/cli
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN redocly bundle internal/server/openapi/openapi.yaml \
+    --output internal/server/openapi/openapi.bundle.yaml
+
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags="-s -w" -o api ./cmd/api
+
+# 実行ステージ　
+FROM scratch
+
+COPY --from=builder /app/api /api
+
+EXPOSE 8080
+
+ENTRYPOINT ["/api"]

@@ -1,0 +1,41 @@
+name: Deploy API via Cloud Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate via Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "${{ vars.WIF_PROVIDER }}"
+          service_account: "${{ vars.WIF_SERVICE_ACCOUNT }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Submit Cloud Build (API)
+        run: |
+          gcloud builds submit \
+            --config=cloudbuild-api.yaml \
+            --substitutions="\
+          _SERVICE_NAME=${{ vars.API_SERVICE_NAME }},\
+          _REGION=${{ vars.REGION }},\
+          _IMAGE_NAME=${{ vars.API_IMAGE_NAME }},\
+          _SERVICE_ACCOUNT=${{ vars.SERVICE_ACCOUNT }},\
+          _CLOUDSQL_INSTANCE=${{ vars.CLOUDSQL_INSTANCE }}\
+          "
+
+      - name: Verify deployment
+        run: |
+          echo "Deployment completed successfully"
+          gcloud run services describe ${{ vars.API_SERVICE_NAME }} --region=${{ vars.REGION }}

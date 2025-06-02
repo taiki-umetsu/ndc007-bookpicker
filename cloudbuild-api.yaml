@@ -1,0 +1,23 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.api', '-t', '${_IMAGE_NAME}', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE_NAME}']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --image=${_IMAGE_NAME}
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --service-account=${_SERVICE_ACCOUNT}
+      - --set-secrets=DATABASE_URL=database-url:latest,GO_ENV=go-env:latest
+      - --set-cloudsql-instances=${_CLOUDSQL_INSTANCE}
+
+images:
+  - '${_IMAGE_NAME}'

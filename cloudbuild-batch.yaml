@@ -1,0 +1,51 @@
+steps:
+  # Dockerイメージのビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - -f
+      - 'Dockerfile.batch'
+      - -t
+      - 'gcr.io/${_PROJECT_ID}/${_IMAGE_NAME}'
+      - '.'
+
+  # Cloud Run Job のデプロイ
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - '${_JOB_NAME}'
+      - --image=gcr.io/${_PROJECT_ID}/${_IMAGE_NAME}
+      - --region=${_REGION}
+      - --service-account=${_SERVICE_ACCOUNT}
+      - --set-secrets=DATABASE_URL=${_DB_SECRET}:latest,GO_ENV=${_GO_ENV_SECRET}:latest,CINII_APPID=${_CINII_SECRET}:latest,GOOGLE_BOOKS_KEY=${_BOOKS_KEY_SECRET}:latest
+      - --set-cloudsql-instances=${_CLOUDSQL_INSTANCE}
+
+  # Cloud Scheduler 作成 or 更新
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if gcloud scheduler jobs describe ${_SCHEDULER_NAME} --location=${_REGION} >/dev/null 2>&1; then
+          echo "Updating scheduler..."
+          gcloud scheduler jobs update http ${_SCHEDULER_NAME} \
+            --schedule="${_SCHEDULE_TIME}" \
+            --uri="https://${_REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${_PROJECT_ID}/jobs/${_JOB_NAME}:run" \
+            --http-method=POST \
+            --oauth-service-account-email=${_SERVICE_ACCOUNT} \
+            --location=${_REGION}
+        else
+          echo "Creating scheduler..."
+          gcloud scheduler jobs create http ${_SCHEDULER_NAME} \
+            --schedule="${_SCHEDULE_TIME}" \
+            --uri="https://${_REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${_PROJECT_ID}/jobs/${_JOB_NAME}:run" \
+            --http-method=POST \
+            --oauth-service-account-email=${_SERVICE_ACCOUNT} \
+            --location=${_REGION}
+        fi
+
+images:
+  - 'gcr.io/${_PROJECT_ID}/${_IMAGE_NAME}'
