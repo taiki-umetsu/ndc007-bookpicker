@@ -1,7 +1,9 @@
 .DEFAULT_GOAL := build
 
 GOTOOLS := golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow \
-           honnef.co/go/tools/cmd/staticcheck
+           honnef.co/go/tools/cmd/staticcheck \
+		   google.golang.org/protobuf/cmd/protoc-gen-go \
+		   google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 .PHONY: tools compile openapi_bundle fmt vet lint test build
 
