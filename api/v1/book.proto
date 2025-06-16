@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package book.v1;
+
+option go_package = "github.com/taiki-umetsu/ndc007-bookpicker/api/book_v1";
+
+service BookService {
+  rpc GetRandomBooks (RandomBooksRequest) returns (RandomBooksResponse);
+}
+
+message RandomBooksRequest {
+  int32 count = 1;
+}
+
+message Book {
+  int64 id = 1;
+  string isbn = 2;
+  string title = 3;
+  string subtitle = 4;
+  string authors = 5;
+  string publisher = 6;
+  string published_date = 7;
+  string description = 8;
+  string book_url = 9;
+  string image_url = 10;
+}
+
+message RandomBooksResponse {
+  repeated Book books = 1;
+}
