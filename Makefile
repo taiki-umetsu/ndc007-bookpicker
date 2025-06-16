@@ -3,7 +3,7 @@
 GOTOOLS := golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow \
            honnef.co/go/tools/cmd/staticcheck
 
-.PHONY: tools openapi_bundle fmt vet lint test build compile
+.PHONY: tools compile openapi_bundle fmt vet lint test build
 
 tools:
 	@echo "Installing Go tools..."
@@ -36,12 +36,6 @@ lint:
 test:
 	GO_ENV=test go test -v ./...
 
-build: tools openapi_bundle fmt vet lint test
-	go mod tidy
-	@mkdir -p bin
-	go build -o bin/batch ./cmd/batch
-	go build -o bin/api   ./cmd/api
-
 compile:
 	protoc api/v1/*.proto \
 		--go_out=. \
@@ -49,3 +43,10 @@ compile:
 		--go_opt=paths=source_relative \
 		--go-grpc_opt=paths=source_relative \
 		--proto_path=.
+
+build: tools compile openapi_bundle fmt vet lint test
+	go mod tidy
+	@mkdir -p bin
+	go build -o bin/batch ./cmd/batch
+	go build -o bin/api   ./cmd/api
+	go build -o bin/grpc  ./cmd/grpc

@@ -3,7 +3,6 @@ module github.com/taiki-umetsu/ndc007-bookpicker
 go 1.24.2
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/go-chi/chi/v5 v5.2.1
